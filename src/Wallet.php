@@ -115,4 +115,21 @@ class Wallet implements WalletInterface
 
         return $body->result ? $body->result : false;
     }
+
+    public function getNowBlock(): Block
+    {
+        $body = $this->_api->post('/wallet/getnowblock');
+
+        return new Block($body->blockID, $body->block_header);
+    }
+
+    public function getBlockById(string $blockId): Block
+    {
+        $body = $this->_api->post('/wallet/getblockbyid', [
+                'value' => $blockId,
+            ]
+        );
+
+        return new Block($body->blockID, $body->block_header);
+    }
 }

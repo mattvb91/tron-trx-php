@@ -7,6 +7,8 @@ use GuzzleHttp\Psr7\Response;
 use mattvb91\TronTrx\Account;
 use mattvb91\TronTrx\Address;
 use mattvb91\TronTrx\Api;
+use mattvb91\TronTrx\Block;
+use mattvb91\TronTrx\Exceptions\TronErrorException;
 use mattvb91\TronTrx\Transaction;
 use PHPUnit\Framework\TestCase;
 
@@ -193,5 +195,32 @@ class WalletTest extends TestCase
         $wallet = new \mattvb91\TronTrx\Wallet($api);
 
         $this->assertNotEmpty($wallet->getAccountNet($account->address));
+    }
+
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::getNowBlock
+     */
+    public function testNowBlock()
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $block = $wallet->getNowBlock();
+        $this->assertInstanceOf(\mattvb91\TronTrx\Block::class, $block);
+
+        return $block;
+    }
+
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::getBlockById
+     * @depends testNowBlock
+     */
+    public function testBlockById(Block $block)
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $blockById = $wallet->getBlockById($block->blockID);
+
+        $this->assertEquals($block, $blockById);
+
+        $this->expectException(TronErrorException::class);
+        $wallet->getBlockById('InvalidBlockId');
     }
 }

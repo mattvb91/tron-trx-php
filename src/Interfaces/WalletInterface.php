@@ -4,6 +4,7 @@ namespace mattvb91\TronTrx\Interfaces;
 
 use mattvb91\TronTrx\Account;
 use mattvb91\TronTrx\Address;
+use mattvb91\TronTrx\Block;
 use mattvb91\TronTrx\Transaction;
 
 /**
@@ -27,4 +28,8 @@ interface WalletInterface
     public function signTransaction(Transaction &$transaction, string $privateKey): Transaction;
 
     public function broadcastTransaction(Transaction $transaction): bool;
+
+    public function getNowBlock(): Block;
+
+    public function getBlockById(string $blockId): Block;
 }
