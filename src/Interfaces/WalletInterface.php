@@ -21,4 +21,6 @@ interface WalletInterface
     public function easyTransferByPrivate(string $private, Address $address, float $amount);
 
     public function createTransaction(Address $toAddress, Address $ownerAddress, float $amount = 0): Transaction;
+
+    public function signTransaction(Transaction &$transaction, string $privateKey): Transaction;
 }

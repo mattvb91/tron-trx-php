@@ -65,13 +65,29 @@ class WalletTest extends TestCase
 
 
     /**
-     * @depends testCreateTransaction
      * @covers \mattvb91\TronTrx\Wallet::getAccount
      * @covers \mattvb91\TronTrx\Account::__construct
      */
-    public function testGetAccount(Address $address)
+    public function testGetAccount()
     {
         $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $address = $wallet->generateAddress();
+
+        /**
+         * Instantiate the fromAddress with private key that is generated
+         * for us with the docker tron sample.
+         *
+         * This is required so we can then create a transaction with $fromAddress.
+         */
+        $this->_api->getClient()
+            ->post('/wallet/easytransferbyprivate', [
+                'json' => [
+                    'privateKey' => 'B8BEAD956B259841440523B639970FA4F5D3B787720EC74E7A6155287222CC45',
+                    'toAddress'  => $address->hexAddress,
+                    'amount'     => 1,
+                ],
+            ]);
+
         $account = $wallet->getAccount($address);
 
         $this->assertInstanceOf(\mattvb91\TronTrx\Account::class, $account);
@@ -103,8 +119,25 @@ class WalletTest extends TestCase
                 ],
             ]);
 
-        $this->assertInstanceOf(Transaction::class, $wallet->createTransaction($toAddress, $fromAddress, 1));
+        $transaction = $wallet->createTransaction($toAddress, $fromAddress, 1);
+        $this->assertInstanceOf(Transaction::class, $transaction);
 
-        return $fromAddress;
+        return ['transaction' => $transaction, 'address' => $fromAddress];
+    }
+
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::signTransaction
+     * @depends testCreateTransaction
+     */
+    public function testSignTransaction(array $input)
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+
+        /** @var Transaction $transaction */
+        $transaction = $input['transaction'];
+
+        $wallet->signTransaction($transaction, $input['address']->privateKey);
+
+        $this->assertTrue($transaction->isSigned());
     }
 }

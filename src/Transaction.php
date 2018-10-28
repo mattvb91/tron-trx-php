@@ -6,11 +6,16 @@ class Transaction
 {
     public $signature = [];
     public $txID = '';
-    public $rawData = \stdClass::class;
+    public $raw_data = \stdClass::class;
 
     public function __construct(string $txID, \stdClass $rawData)
     {
         $this->txID = $txID;
-        $this->rawData = $rawData;
+        $this->raw_data = $rawData;
+    }
+
+    public function isSigned(): bool
+    {
+        return (bool)sizeof($this->signature);
     }
 }

@@ -94,4 +94,24 @@ class Wallet implements WalletInterface
             $body->raw_data
         );
     }
+
+    public function signTransaction(Transaction &$transaction, string $privateKey): Transaction
+    {
+        unset($transaction->signature);
+        $transactionArray = json_decode(json_encode($transaction), true);
+
+        $body = (string)$this->_api->getClient()
+            ->post('/wallet/gettransactionsign', [
+                'json' => [
+                    'transaction' => $transactionArray,
+                    'privateKey'  => $privateKey,
+                ],
+            ])->getBody();
+
+        $body = json_decode($body);
+
+        $transaction->signature = $body->signature;
+
+        return $transaction;
+    }
 }
