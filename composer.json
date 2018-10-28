@@ -1,0 +1,22 @@
+{
+    "name": "mattvb91/trontrx",
+    "description": "Tron TRX Api wrapper",
+    "type": "library",
+    "require": {
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "mattvb91\\TronTrx\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Matthias von Bargen",
+            "email": "matt@mavon.ie"
+        }
+    ]
+}
