@@ -20,40 +20,25 @@ class Wallet implements WalletInterface
 
     public function generateAddress(): Address
     {
-        $body = $this->_api->getClient()
-            ->request('POST', '/wallet/generateaddress')
-            ->getBody();
-
-        $body = json_decode($body);
+        $body = $this->_api->post('/wallet/generateaddress');
 
         return new Address($body->address, $body->privateKey, $body->hexAddress);
     }
 
     public function validateAddress(Address $address): bool
     {
-        $body = $this->_api->getClient()
-            ->post('/wallet/validateaddress', [
-                'json' => [
-                    'address' => $address->address,
-                ],
-            ])->getBody();
-
-        $body = json_decode($body);
+        $body = $this->_api->post('/wallet/validateaddress', [
+            'address' => $address->address,
+        ]);
 
         return $body->result;
     }
 
     public function getAccount(Address $address): Account
     {
-        $body = (string)$this->_api->getClient()
-            ->post('/wallet/getaccount', [
-                'json' => [
-                    'address' => $address->hexAddress,
-                ],
-            ])
-            ->getBody();
-
-        $body = json_decode($body);
+        $body = $this->_api->post('/wallet/getaccount', [
+            'address' => $address->hexAddress,
+        ]);
 
         $address = new Address($body->address);
 
@@ -62,15 +47,10 @@ class Wallet implements WalletInterface
 
     public function getAccountNet(Address $address): ?array
     {
-        $body = (string)$this->_api->getClient()
-            ->post('/wallet/getaccountnet', [
-                'json' => [
-                    'address' => $address->hexAddress,
-                ],
-            ])
-            ->getBody();
-
-        $data = json_decode($body, true);
+        $data = $this->_api->post('/wallet/getaccountnet',
+            ['address' => $address->hexAddress],
+            true
+        );
 
         if (sizeof($data)) {
             return $data;
@@ -93,21 +73,11 @@ class Wallet implements WalletInterface
 
     public function createTransaction(Address $toAddress, Address $ownerAddress, float $amount = 0): Transaction
     {
-        $body = (string)$this->_api->getClient()
-            ->post('/wallet/createtransaction', [
-                'json' => [
-                    'to_address'    => $toAddress->hexAddress,
-                    'owner_address' => $ownerAddress->hexAddress,
-                    'amount'        => $amount,
-                ],
-            ])->getBody();
-
-        $body = json_decode($body);
-
-        //TODO move to api request
-//        if (isset($body->Error)) {
-//            throw new TronErrorException($body->Error);
-//        }
+        $body = $this->_api->post('/wallet/createtransaction', [
+            'to_address'    => $toAddress->hexAddress,
+            'owner_address' => $ownerAddress->hexAddress,
+            'amount'        => $amount,
+        ]);
 
         return new Transaction(
             $body->txID,
@@ -124,15 +94,10 @@ class Wallet implements WalletInterface
         unset($transaction->signature);
         $transactionArray = json_decode(json_encode($transaction), true);
 
-        $body = (string)$this->_api->getClient()
-            ->post('/wallet/gettransactionsign', [
-                'json' => [
-                    'transaction' => $transactionArray,
-                    'privateKey'  => $privateKey,
-                ],
-            ])->getBody();
-
-        $body = json_decode($body);
+        $body = $this->_api->post('/wallet/gettransactionsign', [
+            'transaction' => $transactionArray,
+            'privateKey'  => $privateKey,
+        ]);
 
         $transaction->signature = $body->signature;
 
@@ -146,13 +111,7 @@ class Wallet implements WalletInterface
         }
 
         $transactionArray = json_decode(json_encode($transaction), true);
-
-        $body = (string)$this->_api->getClient()
-            ->post('/wallet/broadcasttransaction', [
-                'json' => $transactionArray,
-            ])->getBody();
-
-        $body = json_decode($body);
+        $body = $this->_api->post('/wallet/broadcasttransaction', $transactionArray);
 
         return $body->result ? $body->result : false;
     }
