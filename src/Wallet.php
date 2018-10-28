@@ -2,6 +2,7 @@
 
 namespace mattvb91\TronTrx;
 
+use mattvb91\TronTrx\Exceptions\TransactionException;
 use mattvb91\TronTrx\Interfaces\WalletInterface;
 
 /**
@@ -59,6 +60,25 @@ class Wallet implements WalletInterface
         return new Account($address, $body->balance, $body->create_time);
     }
 
+    public function getAccountNet(Address $address): ?array
+    {
+        $body = (string)$this->_api->getClient()
+            ->post('/wallet/getaccountnet', [
+                'json' => [
+                    'address' => $address->hexAddress,
+                ],
+            ])
+            ->getBody();
+
+        $data = json_decode($body, true);
+
+        if (sizeof($data)) {
+            return $data;
+        }
+
+        return null;
+    }
+
     /**
      * This is open to attacks. Instead use /wallet/createtransaction,
      * then sign it locally,
@@ -95,6 +115,10 @@ class Wallet implements WalletInterface
         );
     }
 
+    /**
+     * TODO sign locally instead of over api as this is man in the middle attack
+     * waiting to happen by posting privateKey
+     */
     public function signTransaction(Transaction &$transaction, string $privateKey): Transaction
     {
         unset($transaction->signature);
@@ -113,5 +137,23 @@ class Wallet implements WalletInterface
         $transaction->signature = $body->signature;
 
         return $transaction;
+    }
+
+    public function broadcastTransaction(Transaction $transaction): bool
+    {
+        if (!$transaction->isSigned()) {
+            throw new TransactionException('Transaction is not signed');
+        }
+
+        $transactionArray = json_decode(json_encode($transaction), true);
+
+        $body = (string)$this->_api->getClient()
+            ->post('/wallet/broadcasttransaction', [
+                'json' => $transactionArray,
+            ])->getBody();
+
+        $body = json_decode($body);
+
+        return $body->result ? $body->result : false;
     }
 }

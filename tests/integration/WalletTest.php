@@ -1,6 +1,10 @@
 <?php
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
+use mattvb91\TronTrx\Account;
 use mattvb91\TronTrx\Address;
 use mattvb91\TronTrx\Api;
 use mattvb91\TronTrx\Transaction;
@@ -90,7 +94,9 @@ class WalletTest extends TestCase
 
         $account = $wallet->getAccount($address);
 
-        $this->assertInstanceOf(\mattvb91\TronTrx\Account::class, $account);
+        $this->assertInstanceOf(Account::class, $account);
+
+        return $account;
     }
 
     /**
@@ -126,7 +132,7 @@ class WalletTest extends TestCase
     }
 
     /**
-     * @covers \mattvb91\TronTrx\Wallet::signTransaction
+     * @covers  \mattvb91\TronTrx\Wallet::signTransaction
      * @depends testCreateTransaction
      */
     public function testSignTransaction(array $input)
@@ -139,5 +145,53 @@ class WalletTest extends TestCase
         $wallet->signTransaction($transaction, $input['address']->privateKey);
 
         $this->assertTrue($transaction->isSigned());
+
+        return $transaction;
+    }
+
+    /**
+     * @covers  \mattvb91\TronTrx\Wallet::broadcastTransaction
+     * @depends testSignTransaction
+     */
+    public function testBroadcastTransactionFails(Transaction $transaction)
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $this->assertFalse($wallet->broadcastTransaction($transaction));
+
+        $this->expectException(\Exception::class);
+        $wallet->broadcastTransaction(new Transaction('', new stdClass()));
+    }
+
+    public function testBroadcastTransaction()
+    {
+        //TODO implement
+        $this->markTestSkipped();
+    }
+
+    /**
+     * @depends testGetAccount
+     * @covers  \mattvb91\TronTrx\Wallet::getAccountNet
+     */
+    public function testGetAccountNet(Account $account)
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $this->assertNull($wallet->getAccountNet($account->address));
+
+        // Create a mock and queue two responses.
+        $mock = new MockHandler([
+            new Response(200, [], json_encode([
+                'freeNetLimit'   => 5000,
+                'TotalNetLimit'  => 43200000000,
+                'TotalNetWeight' => 5989300712,
+            ])),
+        ]);
+
+        $handler = HandlerStack::create($mock);
+        $client = new Client(['handler' => $handler]);
+
+        $api = new Api($client);
+        $wallet = new \mattvb91\TronTrx\Wallet($api);
+
+        $this->assertNotEmpty($wallet->getAccountNet($account->address));
     }
 }
