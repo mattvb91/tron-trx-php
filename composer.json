@@ -1,6 +1,6 @@
 {
     "name": "mattvb91/trontrx",
-    "description": "Tron TRX Api wrapper",
+    "description": "Library for interacting with the Tron blockchain through Tron-Grid",
     "type": "library",
     "require": {
         "guzzlehttp/guzzle": "^6.3"
