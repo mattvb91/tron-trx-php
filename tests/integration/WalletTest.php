@@ -16,6 +16,10 @@ class WalletTest extends TestCase
 {
     private $_api;
 
+    const TEST_INSTANTIATE_AMMOUNT_SUN = 10000001;
+
+    const TEST_TRANSACTION_AMOUNT = 1000000;
+
     public function __construct(?string $name = null, array $data = [], string $dataName = '')
     {
         parent::__construct($name, $data, $dataName);
@@ -78,21 +82,7 @@ class WalletTest extends TestCase
     {
         $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
         $address = $wallet->generateAddress();
-
-        /**
-         * Instantiate the fromAddress with private key that is generated
-         * for us with the docker tron sample.
-         *
-         * This is required so we can then create a transaction with $fromAddress.
-         */
-        $this->_api->getClient()
-            ->post('/wallet/easytransferbyprivate', [
-                'json' => [
-                    'privateKey' => 'B8BEAD956B259841440523B639970FA4F5D3B787720EC74E7A6155287222CC45',
-                    'toAddress'  => $address->hexAddress,
-                    'amount'     => 1,
-                ],
-            ]);
+        $this->instantiateAddress($address);
 
         $account = $wallet->getAccount($address);
 
@@ -111,23 +101,9 @@ class WalletTest extends TestCase
 
         $toAddress = $wallet->generateAddress();
         $fromAddress = $wallet->generateAddress();
+        $this->instantiateAddress($fromAddress);
 
-        /**
-         * Instantiate the fromAddress with private key that is generated
-         * for us with the docker tron sample.
-         *
-         * This is required so we can then create a transaction with $fromAddress.
-         */
-        $this->_api->getClient()
-            ->post('/wallet/easytransferbyprivate', [
-                'json' => [
-                    'privateKey' => 'B8BEAD956B259841440523B639970FA4F5D3B787720EC74E7A6155287222CC45',
-                    'toAddress'  => $fromAddress->hexAddress,
-                    'amount'     => 1,
-                ],
-            ]);
-
-        $transaction = $wallet->createTransaction($toAddress, $fromAddress, 1);
+        $transaction = $wallet->createTransaction($toAddress, $fromAddress, self::TEST_TRANSACTION_AMOUNT);
         $this->assertInstanceOf(Transaction::class, $transaction);
 
         return ['transaction' => $transaction, 'address' => $fromAddress];
@@ -153,28 +129,55 @@ class WalletTest extends TestCase
 
     /**
      * @covers  \mattvb91\TronTrx\Wallet::broadcastTransaction
-     * @depends testSignTransaction
      */
-    public function testBroadcastTransactionFails(Transaction $transaction)
+    public function testBroadcastTransactionFailsWhenNotSigned()
     {
         $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
-        $this->assertFalse($wallet->broadcastTransaction($transaction));
 
         $this->expectException(\Exception::class);
         $wallet->broadcastTransaction(new Transaction('', new stdClass()));
     }
 
-    public function testBroadcastTransaction()
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::broadcastTransaction
+     * @covers \mattvb91\TronTrx\Wallet::getTransactionById
+     * @depends testSignTransaction
+     */
+    public function testBroadcastTransaction(Transaction $transaction)
     {
-        //TODO implement
-        $this->markTestSkipped();
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $hexAddress = $transaction->raw_data->contract[0]->parameter->value->owner_address;
+
+        $address = new Address(hex2bin($hexAddress), '', $hexAddress);
+
+        $beforeTransactionAccunt = $wallet->getAccount($address);
+        $this->assertNotNull($beforeTransactionAccunt);
+
+        $this->assertTrue($wallet->broadcastTransaction($transaction));
+        $this->assertEquals($transaction->txID, $wallet->getTransactionById($transaction->txID)->txID);
     }
+
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::getAccountNet
+     */
+    public function testGetAccountNet()
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $netAccountTest = $wallet->generateAddress();
+
+        $this->instantiateAddress($netAccountTest);
+
+        $response = $wallet->getAccountNet($netAccountTest);
+        $this->assertArrayHasKey('freeNetLimit', $response);
+        $this->assertArrayHasKey('TotalNetLimit', $response);
+    }
+
 
     /**
      * @depends testGetAccount
      * @covers  \mattvb91\TronTrx\Wallet::getAccountNet
      */
-    public function testGetAccountNet(Account $account)
+    public function testGetAccountNetMock(Account $account)
     {
         $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
         $this->assertNull($wallet->getAccountNet($account->address));
@@ -222,5 +225,31 @@ class WalletTest extends TestCase
 
         $this->expectException(TronErrorException::class);
         $wallet->getBlockById('InvalidBlockId');
+    }
+
+    public function testFreezeBalance()
+    {
+        //Freeze balance of 2, then check accountnet for bandwidth.
+//        $wallet->freezeBalance($address, 1000001, 1);
+//        $wallet->getAccountNet($address);
+        $this->markTestSkipped();
+    }
+
+    /**
+     * @param Address $fromAddress
+     */
+    private function instantiateAddress(Address $fromAddress)
+    {
+        /**
+         * Instantiate the fromAddress with private key that is generated
+         * for us with the docker tron sample.
+         *
+         * This is required as we need to initialize the $fromAddress
+         */
+        $this->_api->post('/wallet/easytransferbyprivate', [
+            'privateKey' => 'B8BEAD956B259841440523B639970FA4F5D3B787720EC74E7A6155287222CC45',
+            'toAddress'  => $fromAddress->hexAddress,
+            'amount'     => self::TEST_INSTANTIATE_AMMOUNT_SUN,
+        ]);
     }
 }

@@ -22,6 +22,7 @@ class ApiTest extends TestCase
 
     /**
      * @covers \mattvb91\TronTrx\Api::post
+     * @covers \mattvb91\TronTrx\Api::checkForErrorResponse
      */
     public function testPostAssocTrueFalse()
     {
@@ -48,38 +49,37 @@ class ApiTest extends TestCase
     }
 
     /**
-     * @covers \mattvb91\TronTrx\Api::post
+     * @covers \mattvb91\TronTrx\Api::checkForErrorResponse
+     * @dataProvider getResponses
      */
-    public function testErrorExceptionIsThrownWithAssoc()
+    public function testErrorExceptionIsThrownWithAssoc($client, $assoc)
     {
-        $mock = new MockHandler([
-            new Response(200, [], json_encode(['Error' => 'Error'])),
-        ]);
-
-        $handler = HandlerStack::create($mock);
-        $client = new Client(['handler' => $handler]);
-
         $api = new Api($client);
 
         $this->expectException(TronErrorException::class);
-        $api->post('/test', [], true);
+        $api->post('/test', [], $assoc);
     }
 
-    /**
-     * @covers \mattvb91\TronTrx\Api::post
-     */
-    public function testErrorExceptionIsThrownWithObject()
+    public function getResponses()
     {
+        $errorResponse = new Response(200, [], json_encode(['Error' => 'Error']));
+        $codeResponse = new Response(200, [], json_encode(['code' => 'code', 'message' => bin2hex('test message')]));
+
         $mock = new MockHandler([
-            new Response(200, [], json_encode(['Error' => 'Error'])),
+            $errorResponse,
+            $errorResponse,
+            $codeResponse,
+            $codeResponse,
         ]);
 
         $handler = HandlerStack::create($mock);
         $client = new Client(['handler' => $handler]);
 
-        $api = new Api($client);
-
-        $this->expectException(TronErrorException::class);
-        $api->post('/test');
+        return [
+            [$client, true],
+            [$client, false],
+            [$client, true],
+            [$client, false],
+        ];
     }
 }

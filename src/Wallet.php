@@ -60,9 +60,9 @@ class Wallet implements WalletInterface
     }
 
     /**
-     * This is open to attacks. Instead use /wallet/createtransaction,
+     * This is open to attacks. Instead use createTransaction(),
      * then sign it locally,
-     * then /wallet/broadcasttransaction
+     * then broadcastTransaction()
      *
      * @deprecated See exception
      */
@@ -116,6 +116,16 @@ class Wallet implements WalletInterface
         return $body->result ? $body->result : false;
     }
 
+    public function getTransactionById(string $transactionID): Transaction
+    {
+        $body = $this->_api->post('/wallet/gettransactionbyid', [
+                'value' => $transactionID,
+            ]
+        );
+
+        return new Transaction($body->txID, $body->raw_data);
+    }
+
     public function getNowBlock(): Block
     {
         $body = $this->_api->post('/wallet/getnowblock');
@@ -132,4 +142,17 @@ class Wallet implements WalletInterface
 
         return new Block($body->blockID, $body->block_header);
     }
+
+//    public function freezeBalance(Address $ownerAddress, float $balanceToFreeze, int $durationDays, string $resource = 'BANDWIDTH')
+//    {
+//        $body = $this->_api->post('/wallet/freezebalance', [
+//                'owner_address'   => $ownerAddress->hexAddress,
+//                'frozen_balance'  => $balanceToFreeze,
+//                'frozen_duration' => $durationDays,
+//                'resource'        => $resource,
+//            ]
+//        );
+//
+//        return $body;
+//    }
 }

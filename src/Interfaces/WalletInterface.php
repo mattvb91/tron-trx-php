@@ -29,7 +29,11 @@ interface WalletInterface
 
     public function broadcastTransaction(Transaction $transaction): bool;
 
+    public function getTransactionById(string $transactionID): Transaction;
+
     public function getNowBlock(): Block;
 
     public function getBlockById(string $blockId): Block;
+
+//    public function freezeBalance(Address $ownerAddress, float $balanceToFreeze, int $durationDays, string $resource = 'BANDWIDTH');
 }
