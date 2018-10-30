@@ -4,6 +4,7 @@ namespace mattvb91\TronTrx;
 
 use mattvb91\TronTrx\Exceptions\TransactionException;
 use mattvb91\TronTrx\Interfaces\WalletInterface;
+use mattvb91\TronTrx\Traits\TronAwareTrait;
 
 /**
  * Class Wallet
@@ -11,6 +12,8 @@ use mattvb91\TronTrx\Interfaces\WalletInterface;
  */
 class Wallet implements WalletInterface
 {
+    use TronAwareTrait;
+
     private $_api;
 
     public function __construct(Api $_api)

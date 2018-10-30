@@ -3,6 +3,7 @@
     "description": "Library for interacting with the Tron blockchain through Tron-Grid",
     "type": "library",
     "require": {
+        "ext-bcmath": "*",
         "guzzlehttp/guzzle": "^6.3"
     },
     "require-dev": {

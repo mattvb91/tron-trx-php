@@ -46,6 +46,18 @@ class WalletTest extends TestCase
 
     /**
      * @depends testGenerateAddress
+     */
+    public function testSignatureHexSigning(Address $address)
+    {
+        $wallet = new mattvb91\TronTrx\Wallet($this->_api);
+
+        $toHex = $wallet->toHex($address->address);
+        $this->assertEquals($address->hexAddress, $toHex);
+        $this->assertEquals($address->address, $wallet->hexString2Address($toHex));
+    }
+
+    /**
+     * @depends testGenerateAddress
      * @covers  \mattvb91\TronTrx\Wallet::validateAddress
      */
     public function testAddressValidation(Address $address)
@@ -148,7 +160,7 @@ class WalletTest extends TestCase
         $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
         $hexAddress = $transaction->raw_data->contract[0]->parameter->value->owner_address;
 
-        $address = new Address(hex2bin($hexAddress), '', $hexAddress);
+        $address = new Address($wallet->fromHex($hexAddress), '', $hexAddress);
 
         $beforeTransactionAccunt = $wallet->getAccount($address);
         $this->assertNotNull($beforeTransactionAccunt);
