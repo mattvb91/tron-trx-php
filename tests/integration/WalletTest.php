@@ -45,6 +45,27 @@ class WalletTest extends TestCase
     }
 
     /**
+     * @covers \mattvb91\TronTrx\Wallet::validateAddress
+     * @covers \mattvb91\TronTrx\Address::isValid
+     */
+    public function testValidatingAddress()
+    {
+        $wallet = new mattvb91\TronTrx\Wallet($this->_api);
+
+        $address = new Address('test', '', '');
+        $this->assertFalse($address->isValid());
+
+        $address = new Address('1234567890123456789012345678901221', '', '');
+        $this->assertFalse($address->isValid());
+        $this->assertFalse($wallet->validateAddress($address));
+
+        for ($i = 0; $i < 5; $i++) {
+            $address = $wallet->generateAddress();
+            $this->assertEquals($wallet->validateAddress($address), $address->isValid());
+        }
+    }
+
+    /**
      * @depends testGenerateAddress
      */
     public function testSignatureHexSigning(Address $address)
@@ -56,16 +77,6 @@ class WalletTest extends TestCase
         $this->assertEquals($address->address, $wallet->hexString2Address($toHex));
     }
 
-    /**
-     * @depends testGenerateAddress
-     * @covers  \mattvb91\TronTrx\Wallet::validateAddress
-     */
-    public function testAddressValidation(Address $address)
-    {
-        $wallet = new mattvb91\TronTrx\Wallet($this->_api);
-
-        $this->assertTrue($wallet->validateAddress($address));
-    }
 
     /**
      * @covers \mattvb91\TronTrx\Wallet::easyTransferByPrivate
