@@ -17,7 +17,7 @@ interface WalletInterface
 
     public function validateAddress(Address $address): bool;
 
-    public function getAccount(Address $address): Account;
+    public function getAccount(Address $address): ?Account;
 
     public function getAccountNet(Address $address): ?array;
 
