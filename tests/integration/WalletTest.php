@@ -25,7 +25,7 @@ class WalletTest extends TestCase
         parent::__construct($name, $data, $dataName);
 
         $this->_api = new Api(new Client([
-            'base_uri' => 'http://192.168.178.26:8090',
+            'base_uri' => 'https://api.shasta.trongrid.io',
         ]));
     }
 
@@ -79,7 +79,7 @@ class WalletTest extends TestCase
         $address = $wallet->generateAddress();
 
         $this->assertTrue($wallet->easyTransferByPrivate(
-            'B8BEAD956B259841440523B639970FA4F5D3B787720EC74E7A6155287222CC45',
+            'PRIVATE',
             $address,
             1
         ));
@@ -101,6 +101,26 @@ class WalletTest extends TestCase
         $this->assertInstanceOf(Account::class, $account);
 
         return $account;
+    }
+
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::getAccount
+     */
+    public function testGetAccountReturnsNullOnFail()
+    {
+        // Create a mock and queue two responses.
+        $mock = new MockHandler([
+            new Response(200, [], json_encode([])),
+        ]);
+
+        $handler = HandlerStack::create($mock);
+        $client = new Client(['handler' => $handler]);
+
+        $api = new Api($client);
+        $wallet = new \mattvb91\TronTrx\Wallet($api);
+
+        $address = new Address('NOT_VALID', '', $wallet->toHex('NOT_VALID'));
+        $this->assertNull($wallet->getAccount($address));
     }
 
     /**
@@ -252,16 +272,10 @@ class WalletTest extends TestCase
      */
     private function instantiateAddress(Address $fromAddress)
     {
-        /**
-         * Instantiate the fromAddress with private key that is generated
-         * for us with the docker tron sample.
-         *
-         * This is required as we need to initialize the $fromAddress
-         */
-        $this->_api->post('/wallet/easytransferbyprivate', [
-            'privateKey' => 'B8BEAD956B259841440523B639970FA4F5D3B787720EC74E7A6155287222CC45',
-            'toAddress'  => $fromAddress->hexAddress,
-            'amount'     => self::TEST_INSTANTIATE_AMMOUNT_SUN,
-        ]);
+        $this->assertEquals(200, $this->_api->getClient()->post('https://www.trongrid.io/shasta/submit', [
+            'form_params' => [
+                'value' => $fromAddress->address,
+            ],
+        ])->getStatusCode());
     }
 }

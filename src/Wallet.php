@@ -37,15 +37,18 @@ class Wallet implements WalletInterface
         return $body->result;
     }
 
-    public function getAccount(Address $address): Account
+    public function getAccount(Address $address): ?Account
     {
         $body = $this->_api->post('/wallet/getaccount', [
             'address' => $address->hexAddress,
         ]);
 
-        $address = new Address($body->address);
+        if (isset($body->address)) {
+            $address = new Address($body->address);
+            return new Account($address, $body->balance, $body->create_time);
+        }
 
-        return new Account($address, $body->balance, $body->create_time);
+        return null;
     }
 
     public function getAccountNet(Address $address): ?array
