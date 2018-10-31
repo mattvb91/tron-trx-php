@@ -6,9 +6,14 @@ php:
 before_script:
   - composer self-update
   - composer install --prefer-source --no-interaction --dev
+  - composer dump-autoload
 
-script: phpunit
+script: ./vendor/bin/phpunit --configuration=./phpunit.xml --coverage-clover ./build/logs/clover.xml 
 
+after_success:
+  - travis_retry php ./vendor/bin/php-coveralls
+  
 cache:
   directories:
   - $HOME/.composer/cache/files
+  - ./vendor
