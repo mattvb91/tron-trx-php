@@ -198,6 +198,10 @@ class WalletTest extends TestCase
 
         $this->assertTrue($wallet->broadcastTransaction($transaction));
         $this->assertEquals($transaction->txID, $wallet->getTransactionById($transaction->txID)->txID);
+
+        echo 'Success test transaction' . PHP_EOL;
+        echo 'From Address: https://explorer.shasta.trongrid.io/address/' . $address->address . PHP_EOL;
+        echo 'Transaction: https://explorer.shasta.trongrid.io/transaction/' . $transaction->txID . PHP_EOL;
     }
 
     /**
