@@ -30,6 +30,10 @@ class Wallet implements WalletInterface
 
     public function validateAddress(Address $address): bool
     {
+        if (!$address->isValid()) {
+            return false;
+        }
+
         $body = $this->_api->post('/wallet/validateaddress', [
             'address' => $address->address,
         ]);
