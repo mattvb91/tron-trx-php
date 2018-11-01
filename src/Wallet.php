@@ -6,6 +6,10 @@ use kornrunner\Keccak;
 use mattvb91\TronTrx\Exceptions\TransactionException;
 use mattvb91\TronTrx\Exceptions\TronErrorException;
 use mattvb91\TronTrx\Interfaces\WalletInterface;
+use mattvb91\TronTrx\Support\Base58;
+use mattvb91\TronTrx\Support\Base58Check;
+use mattvb91\TronTrx\Support\Crypto;
+use mattvb91\TronTrx\Support\Hash;
 use mattvb91\TronTrx\Traits\TronAwareTrait;
 use Phactor\Key;
 
@@ -49,12 +53,18 @@ class Wallet implements WalletInterface
             }
 
             $publicKeyHex = "04$x$y";
+
             $hash = Keccak::hash($publicKeyHex, 256);
+            $addressHex = Address::ADDRESS_PREFIX . substr($hash, strlen($hash) - 24);
+            $addressHex = hex2bin($addressHex);
 
-            $addressHex = Address::ADDRESS_PREFIX . substr($hash, 24, strlen($hash));
-            $address = $this->hexString2Address($addressHex);
+            $hash0 = Hash::SHA256($addressHex);
+            $hash1 = Hash::SHA256($hash0);
+            $checksum = substr($hash1, 0, 4);
+            $checksum = $addressHex . $checksum;
+            $base58 = Base58::encode(Crypto::bin2bc($checksum));
 
-            $address = new Address($address, $privateKey, $this->toHex($address));
+            $address = new Address($base58, $privateKey, $this->toHex($base58));
 
             if ($attempts++ === 3) {
                 throw new TronErrorException('Could not generate valid key');
