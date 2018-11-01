@@ -2,9 +2,12 @@
 
 namespace mattvb91\TronTrx;
 
+use kornrunner\Keccak;
 use mattvb91\TronTrx\Exceptions\TransactionException;
+use mattvb91\TronTrx\Exceptions\TronErrorException;
 use mattvb91\TronTrx\Interfaces\WalletInterface;
 use mattvb91\TronTrx\Traits\TronAwareTrait;
+use Phactor\Key;
 
 /**
  * Class Wallet
@@ -23,9 +26,43 @@ class Wallet implements WalletInterface
 
     public function generateAddress(): Address
     {
-        $body = $this->_api->post('/wallet/generateaddress');
+        $attempts = 0;
 
-        return new Address($body->address, $body->privateKey, $body->hexAddress);
+        do {
+            $key = new Key();
+            $info = $key->GenerateKeypair();
+
+            $privateKey = $info['private_key_hex'];
+            while (strlen($privateKey) < 64) {
+                $privateKey = "0$privateKey";
+            }
+
+            $x = $this->toHex($info["public_key_x"]);
+            $y = $this->toHex($info["public_key_y"]);
+
+            while (strlen($x) < 64) {
+                $x = "0$x";
+            }
+
+            while (strlen($y) < 64) {
+                $y = "0$y";
+            }
+
+            $publicKeyHex = "04$x$y";
+            $hash = Keccak::hash($publicKeyHex, 256);
+
+            $addressHex = Address::ADDRESS_PREFIX . substr($hash, 24, strlen($hash));
+            $address = $this->hexString2Address($addressHex);
+
+            $address = new Address($address, $privateKey, $this->toHex($address));
+
+            if ($attempts++ === 3) {
+                throw new TronErrorException('Could not generate valid key');
+            }
+
+        } while (!$this->validateAddress($address));
+
+        return $address;
     }
 
     public function validateAddress(Address $address): bool
