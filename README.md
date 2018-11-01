@@ -21,12 +21,26 @@ any actions such as generating addresses/private keys or signing are all done lo
 
 ### Prerequisites
 
-Your PHP installation requires bcmath & gmp extensions to be enabled. Dockerfile coming soon.
+Your PHP installation requires bcmath & gmp extensions to be enabled.
 
 ### Installing
 
 ```
 composer require mattvb91/trontrx
+```
+
+### Docker
+
+There is a [Dockerfile](/build/Dockerfile) available that you can use to build a working image to get started quickly.
+
+```bash
+cd build
+docker build -t tron-trx-php .
+cd ../
+docker run -it -v $(pwd):/app -u 1000 tron-trx-php /bin/bash
+composer install
+./vendor/bin/phpunit
+
 ```
 
 ## Available interface
