@@ -36,11 +36,11 @@ composer require mattvb91/trontrx
 ## Built With
 
 * [ionux/phactor](https://github.com/ionux/phactor) - PHP implementation of the elliptic curve based on secp256k1
-* [php-keccak](https://github.com/ionux/phactor) - Pure PHP implementation of Keccak (SHA-3)
+* [php-keccak](https://github.com/kornrunner/php-keccak) - Pure PHP implementation of Keccak (SHA-3)
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/mattvb91/tron-trx-php/tags). 
 
 ## Contributors
 
