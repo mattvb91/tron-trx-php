@@ -6,6 +6,7 @@ use kornrunner\Keccak;
 use mattvb91\TronTrx\Exceptions\TransactionException;
 use mattvb91\TronTrx\Exceptions\TronErrorException;
 use mattvb91\TronTrx\Interfaces\WalletInterface;
+use mattvb91\TronTrx\Support\Base58Check;
 use mattvb91\TronTrx\Traits\TronAwareTrait;
 use Phactor\Key;
 
@@ -37,22 +38,9 @@ class Wallet implements WalletInterface
                 $privateKey = "0$privateKey";
             }
 
-            $x = $this->toHex($info["public_key_x"]);
-            $y = $this->toHex($info["public_key_y"]);
-
-            while (strlen($x) < 64) {
-                $x = "0$x";
-            }
-
-            while (strlen($y) < 64) {
-                $y = "0$y";
-            }
-
-            $publicKeyHex = "04$x$y";
-            $hash = Keccak::hash($publicKeyHex, 256);
-
-            $addressHex = Address::ADDRESS_PREFIX . substr($hash, 24, strlen($hash));
-            $address = $this->hexString2Address($addressHex);
+            $hash = Keccak::hash($info['public_key'], 256);
+            $addressHex = substr($hash, 24, strlen($hash));
+            $address = Base58Check::encode($addressHex, Address::ADDRESS_PREFIX_BYTE, false);
 
             $address = new Address($address, $privateKey, $this->toHex($address));
 
