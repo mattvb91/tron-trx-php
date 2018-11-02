@@ -283,6 +283,40 @@ class WalletTest extends TestCase
     }
 
     /**
+     * @covers \mattvb91\TronTrx\Wallet::listNodes
+     */
+    public function testListNodes()
+    {
+        // Create a mock and queue two responses.
+        $mock = new MockHandler([
+            new Response(200, [], json_encode(['nodes' => ['address' => ['host' => '33382e3134322e37322e3832', 'port' => '1112']]])),
+        ]);
+
+        $handler = HandlerStack::create($mock);
+        $client = new Client(['handler' => $handler]);
+
+        $api = new Api($client);
+        $wallet = new \mattvb91\TronTrx\Wallet($api);
+
+        $listNodes = $wallet->listNodes();
+        $this->assertArrayHasKey('nodes', $listNodes);
+    }
+
+    /**
+     * @covers \mattvb91\TronTrx\Wallet::listWitnesses
+     * @covers \mattvb91\TronTrx\Witness::__construct
+     */
+    public function testListWitnesses()
+    {
+        $wallet = new \mattvb91\TronTrx\Wallet($this->_api);
+        $test = $wallet->listWitnesses();
+
+        foreach ($test as $witnesses) {
+            $this->assertInstanceOf(\mattvb91\TronTrx\Witness::class, $witnesses);
+        }
+    }
+
+    /**
      * @param Address $fromAddress
      */
     private function instantiateAddress(Address $fromAddress)

@@ -35,5 +35,9 @@ interface WalletInterface
 
     public function getBlockById(string $blockId): Block;
 
+    public function listNodes(): array;
+
+    public function listWitnesses(): array;
+
 //    public function freezeBalance(Address $ownerAddress, float $balanceToFreeze, int $durationDays, string $resource = 'BANDWIDTH');
 }
