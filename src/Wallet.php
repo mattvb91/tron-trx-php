@@ -28,43 +28,45 @@ class Wallet implements WalletInterface
         $this->_api = $_api;
     }
 
+    public function genKeyPair() {
+        $key = new Key();
+
+        return $key->GenerateKeypair();
+    }
+
+    public function getAddressHex($pubKeyBin) {
+        if (strlen($pubKeyBin) == 65) {
+            $pubKeyBin = substr($pubKeyBin, 1);
+        }
+
+        $hash = Keccak::hash($pubKeyBin, 256);
+
+        return Address::ADDRESS_PREFIX . substr($hash, 24);
+    }
+
+    public function getBase58CheckAddress($addressBin) {
+        $hash0 = Hash::SHA256($addressBin);
+        $hash1 = Hash::SHA256($hash0);
+        $checksum = substr($hash1, 0, 4);
+        $checksum = $addressBin . $checksum;
+
+        return Base58::encode(Crypto::bin2bc($checksum));
+    }
+
     public function generateAddress(): Address
     {
         $attempts = 0;
 
         do {
-            $key = new Key();
-            $info = $key->GenerateKeypair();
+            $keyPair = $this->genKeyPair();
+            $privateKeyHex = $keyPair['private_key_hex'];
+            $pubKeyHex = $keyPair['public_key_hex'];
+            $pubKeyBin = hex2bin($pubKeyHex);
+            $addressHex = $this->getAddressHex($pubKeyBin);
+            $addressBin = hex2bin($addressHex);
+            $addressBase58 = $this->getBase58CheckAddress($addressBin);
 
-            $privateKey = $info['private_key_hex'];
-            while (strlen($privateKey) < 64) {
-                $privateKey = "0$privateKey";
-            }
-
-            $x = $this->toHex($info["public_key_x"]);
-            $y = $this->toHex($info["public_key_y"]);
-
-            while (strlen($x) < 64) {
-                $x = "0$x";
-            }
-
-            while (strlen($y) < 64) {
-                $y = "0$y";
-            }
-
-            $publicKeyHex = "04$x$y";
-
-            $hash = Keccak::hash($publicKeyHex, 256);
-            $addressHex = Address::ADDRESS_PREFIX . substr($hash, strlen($hash) - 24);
-            $addressHex = hex2bin($addressHex);
-
-            $hash0 = Hash::SHA256($addressHex);
-            $hash1 = Hash::SHA256($hash0);
-            $checksum = substr($hash1, 0, 4);
-            $checksum = $addressHex . $checksum;
-            $base58 = Base58::encode(Crypto::bin2bc($checksum));
-
-            $address = new Address($base58, $privateKey, $this->toHex($base58));
+            $address = new Address($addressBase58, $privateKeyHex, $addressHex);
 
             if ($attempts++ === 3) {
                 throw new TronErrorException('Could not generate valid key');
