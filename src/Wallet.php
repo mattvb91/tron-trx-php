@@ -28,13 +28,15 @@ class Wallet implements WalletInterface
         $this->_api = $_api;
     }
 
-    public function genKeyPair() {
+    public function genKeyPair(): array
+    {
         $key = new Key();
 
         return $key->GenerateKeypair();
     }
 
-    public function getAddressHex($pubKeyBin) {
+    public function getAddressHex(string $pubKeyBin): string
+    {
         if (strlen($pubKeyBin) == 65) {
             $pubKeyBin = substr($pubKeyBin, 1);
         }
@@ -44,7 +46,8 @@ class Wallet implements WalletInterface
         return Address::ADDRESS_PREFIX . substr($hash, 24);
     }
 
-    public function getBase58CheckAddress($addressBin) {
+    public function getBase58CheckAddress(string $addressBin): string
+    {
         $hash0 = Hash::SHA256($addressBin);
         $hash1 = Hash::SHA256($hash0);
         $checksum = substr($hash1, 0, 4);
@@ -59,6 +62,10 @@ class Wallet implements WalletInterface
         $validAddress = false;
 
         do {
+            if ($attempts++ === 5) {
+                throw new TronErrorException('Could not generate valid key');
+            }
+
             $keyPair = $this->genKeyPair();
             $privateKeyHex = $keyPair['private_key_hex'];
             $pubKeyHex = $keyPair['public_key'];
@@ -74,11 +81,6 @@ class Wallet implements WalletInterface
             $addressBase58 = $this->getBase58CheckAddress($addressBin);
 
             $address = new Address($addressBase58, $privateKeyHex, $addressHex);
-
-            if ($attempts++ > 5) {
-                throw new TronErrorException('Could not generate valid key');
-            }
-
             $validAddress = $this->validateAddress($address);
 
         } while (!$validAddress);

@@ -33,6 +33,7 @@ class WalletTest extends TestCase
      * @covers \mattvb91\TronTrx\Wallet::__construct
      * @covers \mattvb91\TronTrx\Address::__construct
      * @covers \mattvb91\TronTrx\Wallet::generateAddress
+     * @covers \mattvb91\TronTrx\Wallet::genKeyPair
      */
     public function testGenerateAddress()
     {
