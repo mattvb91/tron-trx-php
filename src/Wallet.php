@@ -60,7 +60,7 @@ class Wallet implements WalletInterface
         do {
             $keyPair = $this->genKeyPair();
             $privateKeyHex = $keyPair['private_key_hex'];
-            $pubKeyHex = $keyPair['public_key_hex'];
+            $pubKeyHex = $keyPair['public_key'];
             $pubKeyBin = hex2bin($pubKeyHex);
             $addressHex = $this->getAddressHex($pubKeyBin);
             $addressBin = hex2bin($addressHex);
