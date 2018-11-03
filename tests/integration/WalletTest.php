@@ -59,7 +59,7 @@ class WalletTest extends TestCase
         $this->assertFalse($address->isValid());
         $this->assertFalse($wallet->validateAddress($address));
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             $address = $wallet->generateAddress();
             $this->assertEquals($wallet->validateAddress($address), $address->isValid());
         }

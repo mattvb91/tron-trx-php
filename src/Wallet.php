@@ -56,11 +56,18 @@ class Wallet implements WalletInterface
     public function generateAddress(): Address
     {
         $attempts = 0;
+        $validAddress = false;
 
         do {
             $keyPair = $this->genKeyPair();
             $privateKeyHex = $keyPair['private_key_hex'];
             $pubKeyHex = $keyPair['public_key'];
+
+            //We cant use hex2bin unless the string length is even.
+            if (strlen($pubKeyHex) % 2 !== 0) {
+                continue;
+            }
+
             $pubKeyBin = hex2bin($pubKeyHex);
             $addressHex = $this->getAddressHex($pubKeyBin);
             $addressBin = hex2bin($addressHex);
@@ -68,11 +75,13 @@ class Wallet implements WalletInterface
 
             $address = new Address($addressBase58, $privateKeyHex, $addressHex);
 
-            if ($attempts++ === 3) {
+            if ($attempts++ > 5) {
                 throw new TronErrorException('Could not generate valid key');
             }
 
-        } while (!$this->validateAddress($address));
+            $validAddress = $this->validateAddress($address);
+
+        } while (!$validAddress);
 
         return $address;
     }
