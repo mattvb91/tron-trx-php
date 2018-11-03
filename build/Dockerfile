@@ -29,7 +29,8 @@ RUN apk --no-cache add libmcrypt-dev \
         zlib-dev \
         gmp-dev \
         autoconf \
-        make
+        make \
+	    perl
 
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_HOME /tmp

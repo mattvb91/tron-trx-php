@@ -33,6 +33,7 @@ class WalletTest extends TestCase
      * @covers \mattvb91\TronTrx\Wallet::__construct
      * @covers \mattvb91\TronTrx\Address::__construct
      * @covers \mattvb91\TronTrx\Wallet::generateAddress
+     * @covers \mattvb91\TronTrx\Wallet::genKeyPair
      */
     public function testGenerateAddress()
     {
@@ -59,7 +60,7 @@ class WalletTest extends TestCase
         $this->assertFalse($address->isValid());
         $this->assertFalse($wallet->validateAddress($address));
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             $address = $wallet->generateAddress();
             $this->assertEquals($wallet->validateAddress($address), $address->isValid());
         }

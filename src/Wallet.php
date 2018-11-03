@@ -2,9 +2,16 @@
 
 namespace mattvb91\TronTrx;
 
+use kornrunner\Keccak;
 use mattvb91\TronTrx\Exceptions\TransactionException;
+use mattvb91\TronTrx\Exceptions\TronErrorException;
 use mattvb91\TronTrx\Interfaces\WalletInterface;
+use mattvb91\TronTrx\Support\Base58;
+use mattvb91\TronTrx\Support\Base58Check;
+use mattvb91\TronTrx\Support\Crypto;
+use mattvb91\TronTrx\Support\Hash;
 use mattvb91\TronTrx\Traits\TronAwareTrait;
+use Phactor\Key;
 
 /**
  * Class Wallet
@@ -21,11 +28,64 @@ class Wallet implements WalletInterface
         $this->_api = $_api;
     }
 
+    public function genKeyPair(): array
+    {
+        $key = new Key();
+
+        return $key->GenerateKeypair();
+    }
+
+    public function getAddressHex(string $pubKeyBin): string
+    {
+        if (strlen($pubKeyBin) == 65) {
+            $pubKeyBin = substr($pubKeyBin, 1);
+        }
+
+        $hash = Keccak::hash($pubKeyBin, 256);
+
+        return Address::ADDRESS_PREFIX . substr($hash, 24);
+    }
+
+    public function getBase58CheckAddress(string $addressBin): string
+    {
+        $hash0 = Hash::SHA256($addressBin);
+        $hash1 = Hash::SHA256($hash0);
+        $checksum = substr($hash1, 0, 4);
+        $checksum = $addressBin . $checksum;
+
+        return Base58::encode(Crypto::bin2bc($checksum));
+    }
+
     public function generateAddress(): Address
     {
-        $body = $this->_api->post('/wallet/generateaddress');
+        $attempts = 0;
+        $validAddress = false;
 
-        return new Address($body->address, $body->privateKey, $body->hexAddress);
+        do {
+            if ($attempts++ === 5) {
+                throw new TronErrorException('Could not generate valid key');
+            }
+
+            $keyPair = $this->genKeyPair();
+            $privateKeyHex = $keyPair['private_key_hex'];
+            $pubKeyHex = $keyPair['public_key'];
+
+            //We cant use hex2bin unless the string length is even.
+            if (strlen($pubKeyHex) % 2 !== 0) {
+                continue;
+            }
+
+            $pubKeyBin = hex2bin($pubKeyHex);
+            $addressHex = $this->getAddressHex($pubKeyBin);
+            $addressBin = hex2bin($addressHex);
+            $addressBase58 = $this->getBase58CheckAddress($addressBin);
+
+            $address = new Address($addressBase58, $privateKeyHex, $addressHex);
+            $validAddress = $this->validateAddress($address);
+
+        } while (!$validAddress);
+
+        return $address;
     }
 
     public function validateAddress(Address $address): bool

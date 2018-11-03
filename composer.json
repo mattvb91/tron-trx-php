@@ -4,7 +4,9 @@
     "type": "library",
     "require": {
         "ext-bcmath": "*",
-        "guzzlehttp/guzzle": "^6.3"
+        "guzzlehttp/guzzle": "^6.3",
+        "ionux/phactor": "1.0.8",
+        "kornrunner/keccak": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.4",
