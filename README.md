@@ -58,7 +58,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Contributors
 
-- 
+- [CryptoSpaces](https://github.com/CryptoSpaces)
 
 See also the list of [contributors](https://github.com/mattvb91/tron-trx-php/contributors) who participated in this project.
 
