@@ -15,18 +15,15 @@ RUN apk --no-cache add libmcrypt-dev \
         openssl \
         tini \
         bash \
-        zlib-dev \
         gmp \
         gmp-dev \
     && docker-php-ext-install mbstring \
-        zip \
         bcmath \
         opcache \
         gmp \
 	&& apk del icu-dev \
         freetype-dev \
         build-base \
-        zlib-dev \
         gmp-dev \
         autoconf \
         make \
