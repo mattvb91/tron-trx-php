@@ -44,9 +44,27 @@ composer install
 
 ```
 
+### Usage
+
+```php
+$client = new \GuzzleHttp\Client([
+    'base_uri' => 'https://api.shasta.trongrid.io', //Replace with your node endpoint
+]);
+
+$api = new \mattvb91\TronTrx\Api($client);
+$wallet = new \mattvb91\TronTrx\Wallet($api);
+```
+
 ## Available interface
 
-- TODO describe available interface
+Please refer to the [WalletInterface](src/Interfaces/WalletInterface.php) for details on what methods are available on the wallet.
+
+##### Why is easyTransferByPrivate() final?
+This method is vulnerable to MiTM attacks as you are sending a private key over a network. (This is probably
+a non issue if you are running your own node locally). As a result this method is final and throws an exception to make
+sure developers realise what they are doing.
+
+If you want to implement it you can simply create a new Wallet class and implement the interface yourself.
 
 ## Built With
 
