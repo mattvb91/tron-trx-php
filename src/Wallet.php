@@ -213,6 +213,29 @@ class Wallet implements WalletInterface
         return new Block($body->blockID, $body->block_header);
     }
 
+    public function listNodes(): array
+    {
+        return $this->_api->post('/wallet/listnodes', [], true);
+    }
+
+    public function listWitnesses(): array
+    {
+        $response = $this->_api->post('/wallet/listwitnesses', [], true);
+
+        foreach ($response['witnesses'] as $witnessData) {
+            $witnesses[] = new Witness(
+                $witnessData['address'],
+                $witnessData['url'],
+                $witnessData['voteCount'],
+                $witnessData['totalProduced'],
+                $witnessData['latestBlockNum'],
+                $witnessData['latestSlotNum']
+            );
+        }
+
+        return $witnesses;
+    }
+
 //    public function freezeBalance(Address $ownerAddress, float $balanceToFreeze, int $durationDays, string $resource = 'BANDWIDTH')
 //    {
 //        $body = $this->_api->post('/wallet/freezebalance', [
